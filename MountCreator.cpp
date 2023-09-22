@@ -1,6 +1,5 @@
 #include <fstream>
 #include <iostream>
-#include <regex>
 #include <string>
 #include <vector>
 
@@ -18,14 +17,15 @@ std::string bitMask = "   100001";
 
 std::string convert(const std::string &origin) {
   std::string mount = origin;
-  std::string number = origin.substr(1, 2);
+  std::string mountNumber = origin.substr(1, 2);
 
-  // int n = std::stoi(number) - 2;
-  int n = 2;
-  number = "M" + std::to_string(n);
+  int n = std::stoi(mountNumber) - 2;
+  mountNumber = "M" + std::to_string(n);
 
-  std::regex_replace(mount, std::regex("O" + std::to_string(n)), number);
-  mount.insert(mount.size() - bitMask.size() + 1, bitMask + "\n");
+  mount.replace(0, (n < 10) ? 2 : 3, mountNumber);
+
+  mount.replace(mount.size() - bitMask.size() - 1, bitMask.size() + 1,
+                bitMask + "\n");
 
   return mount;
 }
@@ -55,11 +55,11 @@ int main(int argc, char *argv[]) {
          (ORIGIN_START.compare(line.substr(0, 2))))
     writeLine(tempFile, line);
 
-  std::cout << "a\n\n";
-
   mountLines.push_back(convert(line));
-  while (std::getline(readedFile, line) && line[0] == 'O')
+  while (std::getline(readedFile, line) && line[0] == 'O') {
     mountLines.push_back(convert(line));
+    writeLine(tempFile, line);
+  }
 
   // go to first line of mount
   while (std::getline(readedFile, line) &&
