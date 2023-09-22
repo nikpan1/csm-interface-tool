@@ -1,64 +1,69 @@
-#include <algorithm>
-#include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <regex>
 #include <string>
 #include <vector>
 
 std::string ORIGIN_START = "O2";
+std::string BADMARK_START = "i0";
 std::string bitMask = "   100001";
 #define tempFilename "temp.txt"
 #define _test std::cout << "test\n";
+#define writeLine(output, line)                                                \
+  {                                                                            \
+    std::cout << "  ";                                                         \
+    std::cout << line << "\n";                                                 \
+    output << line << '\n';                                                    \
+  }
 
 std::string convert(const std::string &origin) {
-  std::cout << origin << "|\n";
   std::string mount = origin;
   std::string number = origin.substr(1, 2);
-  std::cout << number << "-D\n";
+
   // int n = std::stoi(number) - 2;
   int n = 2;
   number = "M" + std::to_string(n);
-  std::cout << "Num = " << number << "\nmount= " << mount << "\n";
-  mount.insert(0, number);
-  mount.insert(mount.size() - bitMask.size(), bitMask);
+
+  std::regex_replace(mount, std::regex("O" + std::to_string(n)), number);
+  mount.insert(mount.size() - bitMask.size() + 1, bitMask + "\n");
 
   return mount;
 }
 
-void validate(bool result,
-              std::string errorMessage) { // @TODO zmienic nazwe result
-  if (!result)
+void validate(bool statement, std::string errorMessage) {
+  if (!statement)
     return;
 
   std::cerr << errorMessage;
   std::exit(-1);
 }
-#define writeLine(output, line) output << line << '\n';
 
 int main(int argc, char *argv[]) {
   validate(argc != 2, "Wrong amount of arguments.\n");
 
   char *readedFilename = argv[1];
-  std::ifstream readedFile(readedFilename);
-  validate(!readedFile, "Passed file not found.\n");
-
-  std::ofstream tempFile(tempFilename, std::ios::out | std::ios::app);
-  validate(!tempFile, "Temporary file was not created.\n");
-
   std::vector<std::string> mountLines;
   std::string line;
+  std::ifstream readedFile(readedFilename);
+  std::ofstream tempFile(tempFilename, std::ios::out | std::ios::app);
+
+  validate(!readedFile, "Passed file not found.\n");
+  validate(!tempFile, "Temporary file was not created.\n");
 
   // find first line of origin
   while (std::getline(readedFile, line) &&
-         !(ORIGIN_START.compare(line.substr(0, 1))))
+         (ORIGIN_START.compare(line.substr(0, 2))))
     writeLine(tempFile, line);
+
+  std::cout << "a\n\n";
 
   mountLines.push_back(convert(line));
   while (std::getline(readedFile, line) && line[0] == 'O')
     mountLines.push_back(convert(line));
 
   // go to first line of mount
-  while (std::getline(readedFile, line) && !(line[0] == 'i'))
+  while (std::getline(readedFile, line) &&
+         (BADMARK_START.compare(line.substr(0, 2))))
     writeLine(tempFile, line);
 
   for (auto _mountLine : mountLines)
@@ -69,8 +74,8 @@ int main(int argc, char *argv[]) {
 
   // Remove the original file and replace it with the temporary file
   validate(std::remove(readedFilename) != 0,
-           "Deleting the original file not sucessfull.\n");
+           "Error while deleting the original file.\n");
   validate(std::rename(tempFilename, readedFilename) != 0,
-           "Replacing the files not sucessfull.\n");
+           "Error while replacing the files.\n");
   return 1;
 }
