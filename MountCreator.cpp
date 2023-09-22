@@ -5,7 +5,7 @@
 
 std::string ORIGIN_START = "O2";
 std::string BADMARK_START = "i0";
-std::string bitMask = "   100001";
+std::string bitMask = "   100001\n";
 #define tempFilename "temp.txt"
 #define _test std::cout << "test\n";
 #define writeLine(output, line)                                                \
@@ -22,10 +22,11 @@ std::string convert(const std::string &origin) {
   int n = std::stoi(mountNumber) - 2;
   mountNumber = "M" + std::to_string(n);
 
+  // pastes the number
+  mount[2] = ' ';
   mount.replace(0, (n < 10) ? 2 : 3, mountNumber);
-
-  mount.replace(mount.size() - bitMask.size() - 1, bitMask.size() + 1,
-                bitMask + "\n");
+  // pastes the bitmask
+  mount.replace(mount.size() - bitMask.size(), bitMask.size(), bitMask);
 
   return mount;
 }
