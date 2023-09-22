@@ -25,7 +25,7 @@ std::string convert(const std::string &origin) {
   // pastes the number
   mount[2] = ' ';
   mount.replace(0, (n < 10) ? 2 : 3, mountNumber);
-  // pastes the bitmask
+
   mount.replace(mount.size() - bitMask.size(), bitMask.size(), bitMask);
 
   return mount;
